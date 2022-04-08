@@ -1,0 +1,100 @@
+body {
+  background-color: #808080;
+  font-family: pierresCustomFont;
+}
+
+@font-face {
+  font-family: pierresCustomFont;
+  src: url(Lobster-Regular.ttf);
+}
+
+.makeWhite {
+  background-color: #e7e5e4 !important;
+}
+
+.makeYellow {
+  background-color: #ffff00 !important;
+}
+
+.makeGreen {
+  background-color: #00ff00 !important;
+}
+
+.container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+#tileContainer {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  display: flex;
+  flex-direction: column;
+}
+
+#statusContainer {
+  width: 300px;
+  height: 50px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: hsl(0deg 0% 30% / 73%);
+  border-radius: 0.5rem;
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
+}
+
+#keyboardContainer {
+  width: 350px;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+#tileContainer > div * {
+  width: 55px;
+  height: 55px;
+  margin: 2px;
+  text-align: center;
+  font-size: xxx-large;
+  border-radius: 1rem;
+  background-color: #e7e5e4;
+}
+
+.row {
+  display: flex;
+  width: 100%;
+  justify-content: center;
+}
+
+button {
+  border: none;
+  height: 40px;
+  margin: 2px;
+  color: white;
+  background-color: rgb(58, 58, 58);
+}
+
+button:hover {
+  background-color: rgb(7, 7, 7);
+}
+
+#playAgain {
+  display: none;
+}
+
+.buttonGroup {
+  display: flex !important;
+}
+
+.buttonGroup > button {
+  border-radius: 4px;
+}

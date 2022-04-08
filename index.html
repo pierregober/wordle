@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="styles.css" />
+    <title>Pierres Wordle</title>
+  </head>
+  <body>
+    <div class="container">
+      <div><h3>Pierre's Wordle Application</h3></div>
+      <div class="buttonGroup">
+        <button id="debug" onclick="showAnswer()">Debug</button>
+        <button id="playAgain" onclick="window.location.reload()">
+          Play Again
+        </button>
+      </div>
+
+      <div id="tileContainer"></div>
+      <div id="statusContainer"></div>
+      <div id="keyboardContainer"></div>
+    </div>
+
+    <script type="text/javascript">
+      //IFFE for my word api
+      let word = "";
+      (async () => {
+        const options = {
+          method: "GET",
+          headers: {
+            "X-RapidAPI-Host": "wordsapiv1.p.rapidapi.com",
+            "X-RapidAPI-Key":
+              "2937277847msh304966c3659a4a7p1d73aajsn7b6a9010ecda",
+          },
+        };
+
+        fetch(
+          "https://wordsapiv1.p.rapidapi.com/words/?random=true&letterPattern=%5E%5Ba-zA-Z%5D*%24&letters=5&limit=1&frequencymin=7",
+          options,
+        )
+          .then((response) => response.json())
+          .then((response) => {
+            startGame(response?.word.toUpperCase());
+          })
+          .catch((err) => console.error(err));
+      })();
+
+      function showAnswer() {
+        alert(word);
+      }
+
+      function startGame(randomWord) {
+        word = randomWord;
+
+        //Declare containers to be used throughout the program
+        const $tileContainer = document.getElementById("tileContainer");
+        const $statusContainer = document.getElementById("statusContainer");
+        const $keyboardContainer = document.getElementById("keyboardContainer");
+
+        //Create keys for the keyboard
+        const keyboardKeys = [
+          "Q",
+          "W",
+          "E",
+          "R",
+          "T",
+          "Y",
+          "U",
+          "I",
+          "O",
+          "P",
+          "A",
+          "S",
+          "D",
+          "F",
+          "G",
+          "H",
+          "J",
+          "K",
+          "L",
+          "Z",
+          "X",
+          "C",
+          "V",
+          "B",
+          "N",
+          "M",
+          "SUBMIT",
+          "BACKSPACE",
+        ];
+
+        //Boiler plate for tile creation
+        const tiles = [
+          ["", "", "", "", ""],
+          ["", "", "", "", ""],
+          ["", "", "", "", ""],
+          ["", "", "", "", ""],
+          ["", "", "", "", ""],
+          ["", "", "", "", ""],
+        ];
+
+        keyboardKeys.forEach((key) => {
+          const $button = document.createElement("button");
+          $button.innerText = key;
+          $button.id = key;
+          $button.style.borderRadius = "5px";
+          $button.style.width = "50px";
+          if (key === "SUBMIT" || key === "BACKSPACE") {
+            $button.style.width = "100px";
+            $button.style.color = "white";
+            $button.style.backgroundColor = "blue";
+            if (key === "BACKSPACE") {
+              $button.style.backgroundColor = "red";
+            }
+          }
+          $button.addEventListener("click", (event) =>
+            handleKeyboardClick(event),
+          );
+          $keyboardContainer.appendChild($button);
+        });
+        let currentRow = 0;
+        let currentTile = 0;
+        let winGame = false;
+
+        function showAnswer() {
+          alert(word);
+        }
+        //Click handler for the keyboard
+        function handleKeyboardClick(event) {
+          const pressedKey = event.target.innerText;
+          //handle the backspace key
+          if (pressedKey === "SUBMIT") {
+            return submit();
+          }
+          if (pressedKey == "BACKSPACE") {
+            return backspace();
+          }
+
+          printKey(pressedKey);
+        }
+
+        function printKey(tile) {
+          $statusContainer.innerHTML = "";
+          //print the key to the tile
+          if (currentTile < 5 && currentRow <= 5) {
+            const grabbedTile = document.getElementById(
+              "tile_" + currentRow + "_" + currentTile,
+            );
+            grabbedTile.innerText = tile;
+            tiles[currentRow][currentTile] = tile;
+            grabbedTile.setAttribute("data", tile);
+            currentTile++;
+          }
+        }
+
+        function backspace() {
+          $statusContainer.innerHTML = "";
+          //Only delete if there is a tile to delete
+          if (currentTile > 0) {
+            currentTile--;
+            const grabbedTile = document.getElementById(
+              "tile_" + currentRow + "_" + currentTile,
+            );
+            grabbedTile.innerText = "";
+            tiles[currentRow][currentTile] = "";
+            grabbedTile.setAttribute("data", "");
+          }
+        }
+
+        //Add row elements to tileContainer
+        tiles.forEach((row, i) => {
+          const $row = document.createElement("div");
+          $row.id = "row_" + i;
+          $row.className = "row";
+          $tileContainer.appendChild($row);
+          //Add tile elements to row
+          row.forEach((tile, j) => {
+            const $tile = document.createElement("div");
+            $tile.id = "tile_" + i + "_" + j;
+            $tile.innerText = tile;
+            $row.appendChild($tile);
+          });
+        });
+
+        function submit() {
+          const wordGuess = tiles[currentRow].join("");
+          if (wordGuess.length == 5) {
+            const $debug = document.getElementById("debug");
+            $debug.style.display = "none";
+            function cb(result) {
+              if (result == "Success") {
+                colorTile();
+                if (wordGuess == word) {
+                  status("You win! Want to play again?");
+                  winGame = true;
+                  const $playAgain = document.getElementById("playAgain");
+                  $playAgain.style.display = "block";
+                  return;
+                } else {
+                  if (currentRow >= 5) {
+                    winGame = false;
+                    status("You lost");
+                    return;
+                  }
+                  if (currentRow < 5) {
+                    currentTile = 0;
+                    currentRow++;
+                    return;
+                  }
+                }
+              } else {
+                status("Please enter a valid word!");
+              }
+            }
+            checkWord(wordGuess, cb);
+          }
+        }
+
+        function colorTile() {
+          //This will house Array<object> for the history of the word
+
+          const rowTiles = document.getElementById(
+            "row_" + currentRow,
+          ).childNodes;
+          let guessedWord = [];
+          let copyOfWord = word;
+
+          rowTiles.forEach((tile) => {
+            //Create an array of objects [becasue we need the tile letter and color] so we can edit later
+            guessedWord.push({
+              letter: tile.getAttribute("data"),
+              color: "makeWhite",
+            });
+          });
+
+          guessedWord.forEach(function (letter, i) {
+            if (letter.letter == word[i]) {
+              letter.color = "makeGreen";
+              copyOfWord = copyOfWord.replace(letter.letter, "");
+            }
+          });
+
+          guessedWord.forEach(function (letter, i) {
+            if (copyOfWord.includes(guessedWord[i].letter)) {
+              letter.color = "makeYellow";
+              copyOfWord = copyOfWord.replace(guessedWord.letter, " ");
+            }
+          });
+
+          rowTiles.forEach(function (tile, index) {
+            tile.classList.add(guessedWord[index].color);
+            addColorAttr(guessedWord[index].letter, guessedWord[index].color);
+          });
+        }
+
+        function status(msg) {
+          $statusContainer.innerHTML = "";
+          const status = document.createElement("div");
+          status.innerText = msg;
+          $statusContainer.appendChild(status);
+        }
+
+        function addColorAttr(key, color) {
+          const a = document.getElementById(key);
+          if (color == "makeWhite") {
+            a.disabled = true;
+          }
+          a.classList.add(color);
+        }
+
+        async function checkWord(word, cb) {
+          const options = {
+            method: "GET",
+            headers: {
+              "X-RapidAPI-Host":
+                "twinword-word-graph-dictionary.p.rapidapi.com",
+              "X-RapidAPI-Key":
+                "2937277847msh304966c3659a4a7p1d73aajsn7b6a9010ecda",
+            },
+          };
+
+          return await fetch(
+            "https://twinword-word-graph-dictionary.p.rapidapi.com/association/?entry=" +
+              word,
+            options,
+          )
+            .then((response) => response.json())
+            .then((response) => {
+              cb(response.result_msg);
+            })
+            .catch((err) => console.error(err));
+        }
+      }
+    </script>
+  </body>
+</html>
